@@ -1,0 +1,313 @@
+<div class="header">
+    <ul class="nav nav-pills pull-right">
+        <li><a ng-href="#">Home</a></li>
+        <li class="active" class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown" href="">
+                Menu <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">
+                <li ng-controller="RequestReportCtrl"><a href="#/reqreport">Request</a></li>
+            </ul>
+        </li>
+        <li  ng-controller="MainCtrl"><a href="#" ng-click="logout()">Log Out</a></li>
+    </ul>
+    <h3 class="text-muted">YukKredit.com</h3>
+</div>
+<!-- wait for auth to resolve (avoid flashing login page before redirect -->
+<div ng-cloak class="row">
+    <div class="col-md-12">
+        <form role="form" ng-controller="RequestReportCtrl">
+            <fielset>
+                <legend>Status Permintaan Kredit</legend>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="table-responsive">
+                            <div ng-show="waitingMsg" class="alert alert-info"><strong>{{waitingMsg}}</strong></div>
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Unit</th>
+                                    <th>Harga</th>
+                                    <th>Status Unit</th>
+                                    <th>Status Data</th>
+                                    <th>Status Survey</th>
+                                    <th>Approval</th>
+                                    <th>Action</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr ng-repeat='trans in listTrans'>
+                                    <td>{{trans.request_date}}</td>
+                                    <td>{{trans.merck}}</td>
+                                    <td>{{trans.price | currency : "Rp"}}</td>
+                                    <td>
+                                        <div ng-if="trans.unit_status == 'Init'">
+                                            <span class="label label-primary">{{trans.unit_status}}</span>
+                                        </div>
+                                        <div ng-if="trans.unit_status == 'On Progress'">
+                                            <span class="label label-warning">{{trans.unit_status}}</span>
+                                        </div>
+                                        <div ng-if="trans.unit_status == 'Failed'">
+                                            <span class="label label-danger">{{trans.unit_status}}</span>
+                                        </div>
+                                        <div ng-if="trans.unit_status == 'Ok'">
+                                            <span class="label label-success">{{trans.unit_status}}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div ng-if="trans.data_status == 'Init'">
+                                            <span class="label label-primary">{{trans.data_status}}</span>
+                                        </div>
+                                        <div ng-if="trans.data_status == 'On Progress'">
+                                            <span class="label label-warning">{{trans.data_status}}</span>
+                                        </div>
+                                        <div ng-if="trans.data_status == 'Failed'">
+                                            <span class="label label-danger">{{trans.data_status}}</span>
+                                        </div>
+                                        <div ng-if="trans.data_status == 'Ok'">
+                                            <span class="label label-success">{{trans.data_status}}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div ng-if="trans.survey_status == 'Init'">
+                                            <span class="label label-primary">{{trans.survey_status}}</span>
+                                        </div>
+                                        <div ng-if="trans.survey_status == 'On Progress'">
+                                            <span class="label label-warning">{{trans.survey_status}}</span>
+                                        </div>
+                                        <div ng-if="trans.survey_status == 'Failed'">
+                                            <span class="label label-danger">{{trans.survey_status}}</span>
+                                        </div>
+                                        <div ng-if="trans.survey_status == 'Ok'">
+                                            <span class="label label-success">{{trans.survey_status}}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div ng-if="trans.approval_status == 'Init'">
+                                            <span class="label label-primary">{{trans.approval_status}}</span>
+                                        </div>
+                                        <div ng-if="trans.approval_status == 'On Progress'">
+                                            <span class="label label-warning">{{trans.approval_status}}</span>
+                                        </div>
+                                        <div ng-if="trans.approval_status == 'Failed'">
+                                            <span class="label label-danger">{{trans.approval_status}}</span>
+                                        </div>
+                                        <div ng-if="trans.approval_status == 'Ok'">
+                                            <span class="label label-success">{{trans.approval_status}}</span>
+                                        </div>
+                                    </td>
+                                    <td><button class="btn btn-primary" ng-click="doAction(trans.uid)" ng-disabled="detailDisabled">{{detailButton}}</button></td>
+                                    <td><button class="btn btn-primary" ng-click="doUpdateStatus(trans.uid)" ng-disabled="updateDisabled">{{updateButton}}</button></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </fielset>
+        </form>
+        <br />
+        <div ng-show="err" class="alert alert-danger"><strong>{{err}}</strong></div>
+    </div>
+</div>
+<script type="text/ng-template" id="detailContent.html">
+    <div class="modal-header">
+        <h3>Detail</h3>
+    </div>
+    <div class="modal-body">
+        <div class="row">
+            <div class="col-md-6">
+                <fieldset><strong>Hitungan Kredit</strong></fieldset>
+                <div class="form-group">
+                    <label>OTR</label>
+                    <input class="form-control" type="text" disabled value="{{transactions.leasing_otr | currency : 'Rp'}}"/>
+                </div>
+                <div class="form-group">
+                    <label>DP</label>
+                    <input class="form-control" type="text" disabled value="{{transactions.leasing_dp | currency : 'Rp'}}"/>
+                </div>
+                <div class="form-group">
+                    <label>Tenor</label>
+                    <input class="form-control" type="text" disabled ng-model="tenor.tenor" />
+                </div>
+                <div class="form-group">
+                    <label>Angsuran</label>
+                    <input class="form-control" type="text" disabled  value="{{transactions.leasing_angsuran | currency : 'Rp'}}"/>
+                </div>
+                <div class="form-group">
+                    <a class="btn btn-success" ng-disabled="krdit" ng-click="printDocument('hitungan')">Download</a>
+                </div>
+                <fieldset><strong>Data</strong></fieldset>
+                <div class="form-group">
+                    <label>email</label>
+                    <input class="form-control" type="text" disabled ng-model="user.email" />
+                </div>
+                <div class="form-group">
+                    <label>Nama</label>
+                    <input class="form-control" type="text" disabled ng-model="user.name" />
+                </div>
+                <div class="form-group">
+                    <label>No KTP</label>
+                    <input class="form-control" type="text" disabled ng-model="user.id_no" />
+                </div>
+
+                <div class="form-group">
+                    <label>Tanggal Berlaku KTP</label>
+                    <input class="form-control" type="text" disabled id="idDate" ng-model="user.id_date" />
+                </div>
+
+                <div class="form-group">
+                    <label>Alamat (Sesuai KTP)</label>
+                    <textarea class="form-control" disabled ng-model="user.address"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Alamat Survey</label>
+                    <textarea class="form-control" disabled ng-model="user.surveyAddress"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Tempat Lahir</label>
+                    <input class="form-control" type="text" disabled ng-model="user.birth_place" />
+                </div>
+
+                <div class="form-group">
+                    <label>Tanggal Lahir</label>
+                    <input class="form-control" type="text" disabled id="datepicker" ng-model="user.birth_date" />
+                </div>
+
+                <div class="form-group">
+                    <label>No. Telp</label>
+                    <input class="form-control" type="text" disabled ng-model="user.phone" />
+                </div>
+
+                <div class="form-group">
+                    <label>Handphone</label>
+                    <input class="form-control" type="text" disabled ng-model="user.handphone" />
+                </div>
+
+                <div class="form-group">
+                    <label>Pekerjaan</label>
+                    <input class="form-control" type="text" disabled ng-model="user.job" />
+                </div>
+
+                <div class="form-group">
+                    <label>Gaji / Penghasilan</label>
+                    <input class="form-control" type="text" disabled ng-model="user.income" />
+                </div>
+
+                <div class="form-group">
+                    <label>Penghasilan Lain (Bila Ada)</label>
+                    <input class="form-control" type="text" disabled ng-model="user.anotherIncome" />
+                </div>
+
+                <div class="form-group">
+                    <label>Alamat Kantor / Alamat Usaha</label>
+                    <input class="form-control" type="text" disabled ng-model="user.office_address" />
+                </div>
+
+                <div class="form-group">
+                    <label>No Telp. Kantor</label>
+                    <input class="form-control" type="text" disabled ng-model="user.office_phone" />
+                </div>
+
+                <div class="form-group">
+                    <label>Pekerjaan Pasangan (Bila ada)</label>
+                    <input class="form-control" type="text" disabled ng-model="user.partnerJob" />
+                </div>
+                <div class="form-group">
+                    <a class="btn btn-success" ng-disabled="krdit" ng-click="printDocument('profile')">Download</a>
+                </div>
+
+                <fieldset><strong>Kelengkapan Data</strong></fieldset>
+                <div class="form-group">
+                    <label>Gambar / Foto / Scan KTP</label>
+                    <img ng-src="{{user.id_card_file}}" width="20%">
+                    <a class="btn btn-success" ng-href="{{doDownload(user.id_card_file)}}" download="ktp.png" target="_self">Download</a>
+                </div>
+
+
+                <div class="form-group">
+                    <label>Gambar / Foto / Scan KK</label>
+                    <img ng-src="{{user.family_id_file}}" width="20%">
+                    <a class="btn btn-success" ng-href="{{doDownload(user.family_id_file)}}" download="kk.png" target="_self">Download</a>
+                </div>
+
+                <div class="form-group">
+                    <label>Gambar / Foto / Scan ( PBB,Rekening Listrik,Rekening Telepon ) </label>
+                    <img ng-src="{{user.default_general_file}}" width="20%">
+                    <a class="btn btn-success" ng-href="{{doDownload(user.default_general_file)}}" download="general.png" target="_self">Download</a>
+                </div>
+
+                <div class="form-group">
+                    <label>Gambar / Foto / Scan (Slip Gaji / Penghasilan) </label>
+                    <img ng-src="{{user.income_certificate_file}}" width="20%">
+                    <a class="btn btn-success" ng-href="{{doDownload(user.income_certificate_file)}}" download="penghasilan.png" target="_self">Download</a>
+                </div>
+
+                <div class="form-group">
+                    <label> Gambar / Foto Tempat Usaha </label>
+                    <img ng-src="{{user.business_place_file}}" width="20%">
+                    <a class="btn btn-success" ng-href="{{doDownload(user.business_place_file)}}" download="foto.png" target="_self">Download</a>
+                </div>
+
+                <div class="form-group">
+                    <a class="btn btn-success" ng-disabled="krdit" ng-click="printDocument('all')">Download All</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-primary" ng-click="ok()">OK</button>
+        <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+    </div>
+</script>
+<script type="text/ng-template" id="updateStatusContent.html">
+    <div class="modal-header">
+        <h3>Detail</h3>
+    </div>
+    <div class="modal-body">
+        <div class="row">
+            <div class="col-md-6">
+                <fieldset><strong>Update Status Data</strong></fieldset>
+                <div class="form-group">
+                    <label>Status Unit</label>
+                    <input type="radio" ng-click="onSetUnitStatus('Init')" ng-checked="unitStatus('Init')" name="unitStatus" value="Init">Init&nbsp;&nbsp;
+                    <input type="radio" ng-click="onSetUnitStatus('On Progress')" ng-checked="unitStatus('On Progress')" name="unitStatus" value="On Progress">On Progress&nbsp;&nbsp;
+                    <input type="radio" ng-click="onSetUnitStatus('Failed')"  ng-checked="unitStatus('Failed')" name="unitStatus" value="Failed">Failed&nbsp;&nbsp;
+                    <input type="radio" ng-click="onSetUnitStatus('Ok')"  ng-checked="unitStatus('Ok')" name="unitStatus" value="Ok">Ok&nbsp;&nbsp;
+                    <div ng-show="unitMsg" class="alert alert-info"><strong>{{unitMsg}}</strong></div>
+                </div>
+                <div class="form-group">
+                    <label>Status Data</label>
+                    <input type="radio" ng-click="onSetDataStatus('Init')" ng-checked="dataStatus('Init')" name="dataStatus" value="Init">Init&nbsp;&nbsp;
+                    <input type="radio" ng-click="onSetDataStatus('On Progress')" ng-checked="dataStatus('On Progress')" name="dataStatus" value="On Progress">On Progress&nbsp;&nbsp;
+                    <input type="radio" ng-click="onSetDataStatus('Failed')"  ng-checked="dataStatus('Failed')" name="dataStatus" value="Failed">Failed&nbsp;&nbsp;
+                    <input type="radio" ng-click="onSetDataStatus('Ok')"  ng-checked="dataStatus('Ok')" name="dataStatus" value="Ok">Ok&nbsp;&nbsp;
+                    <div ng-show="dataMsg" class="alert alert-info"><strong>{{dataMsg}}</strong></div>
+                </div>
+                <div class="form-group">
+                    <label>Survey Status</label>
+                    <input type="radio" ng-click="onSetSurveyStatus('Init')" ng-checked="surveyStatus('Init')" name="surveyStatus" value="Init">Init&nbsp;&nbsp;
+                    <input type="radio" ng-click="onSetSurveyStatus('On Progress')" ng-checked="surveyStatus('On Progress')" name="surveyStatus" value="On Progress">On Progress&nbsp;&nbsp;
+                    <input type="radio" ng-click="onSetSurveyStatus('Failed')"  ng-checked="surveyStatus('Failed')" name="surveyStatus" value="Failed">Failed&nbsp;&nbsp;
+                    <input type="radio" ng-click="onSetSurveyStatus('Ok')"  ng-checked="surveyStatus('Ok')" name="surveyStatus" value="Ok">Ok&nbsp;&nbsp;
+                    <div ng-show="surveyMsg" class="alert alert-info"><strong>{{surveyMsg}}</strong></div>
+                </div>
+                <div class="form-group">
+                    <label>Approval</label>
+                    <input type="radio" ng-click="onSetApprovalStatus('Init')" ng-checked="approvalStatus('Init')" name="approvalStatus" value="Init">Init&nbsp;&nbsp;
+                    <input type="radio" ng-click="onSetApprovalStatus('On Progress')" ng-checked="approvalStatus('On Progress')" name="approvalStatus" value="On Progress">On Progress&nbsp;&nbsp;
+                    <input type="radio" ng-click="onSetApprovalStatus('Failed')"  ng-checked="approvalStatus('Failed')" name="approvalStatus" value="Failed">Failed&nbsp;&nbsp;
+                    <input type="radio" ng-click="onSetApprovalStatus('Ok')"  ng-checked="approvalStatus('Ok')" name="approvalStatus" value="Ok">Ok&nbsp;&nbsp;
+                    <div ng-show="approvalMsg" class="alert alert-info"><strong>{{approvalMsg}}</strong></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-primary" ng-click="ok()">Done</button>
+        <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+    </div>
+</script>
